@@ -19,7 +19,7 @@
     </div>
 
     <timer ref="timer" v-bind:stopped="state !== 'recording' && state !== 'pre-recording'" 
-      v-if="state !== 'unsupported' && state !== 'done' && state !== 'insecure-not-allowed'"></timer>
+      v-if="state !== 'playing' || state !== 'unsupported' && state !== 'done' && state !== 'insecure-not-allowed'"></timer>
 
     <div v-if="state !== 'done'  && title" class="title" v-html="title" />
 

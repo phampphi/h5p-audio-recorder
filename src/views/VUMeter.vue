@@ -57,11 +57,11 @@
 
 <style lang="scss" type="text/scss">
   .recording-indicator-wrapper {
-    height: 9.375em;
-    width: 9.375em;
+    height: 5em;
+    width: 5em;
     margin-left: auto;
     margin-right: auto;
-    line-height: 9.375em;
+    line-height: 5em;
     color: #8e8e8e;
     position: relative;
     margin-bottom: 1em;

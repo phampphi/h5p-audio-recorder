@@ -4,9 +4,28 @@
     "importance": "high",
     "name": "title",
     "type": "text",
-    "widget": "textarea",
+    "widget": "html",
     "description": "Optional text to display above the audio recorder",
-    "optional": true
+    "optional": true,
+    "enterMode": "p",
+    "tags": [
+      "strong",
+      "em",
+      "del",
+      "a",
+      "ul",
+      "ol",
+      "h2",
+      "h3",
+      "hr",
+      "pre",
+      "code"
+    ],
+    "font": {
+      "size": true,
+      "color": true,
+      "background": true
+    }
   },
   {
     "name": "audioFile",

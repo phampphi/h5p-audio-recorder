@@ -1,9 +1,9 @@
-import Vue from 'vue';
-import AudioRecorderView from './views/AudioRecorder.vue';
-import VUMeter from './views/VUMeter.vue';
-import Timer from './views/Timer.vue';
 import Recorder from 'components/Recorder';
 import State from 'components/State';
+import Vue from 'vue';
+import AudioRecorderView from './views/AudioRecorder.vue';
+import Timer from './views/Timer.vue';
+import VUMeter from './views/VUMeter.vue';
 
 const AUDIO_SRC_NOT_SPECIFIED = '';
 
@@ -34,24 +34,50 @@ export default class {
 
     const recorder = this.recorder = new Recorder();
 
+    let readyMsg = params.l10n.statusReadyToRecord;
+    if (params.startRecordingDelays > 0 && params.audioFile === undefined)
+      readyMsg = params.l10n.statusReadyAndAutoRecord + ' in ' + params.startRecordingDelays + ' seconds.';
+    else if (params.startRecordingDelays > 0 && params.audioFile !== undefined)
+      readyMsg = params.l10n.audioFinishesStartRecording + ' in ' + params.startRecordingDelays + ' seconds.';
+    else if (params.audioFile !== undefined)
+      readyMsg = params.l10n.statusReadyAndAutoRecord + ' ' + params.l10n.audioFinishes;
     const statusMessages = {};
     statusMessages[State.UNSUPPORTED] = params.l10n.microphoneNotSupported;
     statusMessages[State.BLOCKED] = params.l10n.microphoneInaccessible;
-    statusMessages[State.READY] = params.l10n.statusReadyToRecord;
+    statusMessages[State.READY] = readyMsg;
+    statusMessages[State.PRE_RECORDING] = params.l10n.statusPreRecording;
     statusMessages[State.RECORDING] = params.l10n.statusRecording;
     statusMessages[State.PAUSED] = params.l10n.statusPaused;
     statusMessages[State.DONE] = params.l10n.statusFinishedRecording;
     statusMessages[State.INSECURE_NOT_ALLOWED] = params.l10n.insecureNotAllowed;
     statusMessages[State.CANT_CREATE_AUDIO_FILE] = params.l10n.statusCantCreateTheAudioFile;
 
+    // Add supported for extra audio files.
+    let audioFileSrc;
+    if (params.audioFile !== undefined && params.audioFile instanceof Object) {
+      var file = params.audioFile[0];
+      if ("audio/mpeg" === file.mime) {
+        audioFileSrc = H5P.getPath(file.path, contentId);
+      }
+    }
+
     AudioRecorderView.data = () => ({
       title: params.title,
       state: recorder.supported() ? State.READY : State.UNSUPPORTED,
       statusMessages,
       l10n: params.l10n,
+      audioFileSrc: !!audioFileSrc ? audioFileSrc : AUDIO_SRC_NOT_SPECIFIED,
       audioSrc: AUDIO_SRC_NOT_SPECIFIED,
       audioFilename: '',
-      avgMicFrequency: 0
+      avgMicFrequency: 0,
+      isAutoplay: params.autoplayAudioFile,
+      canRetry: params.retry,
+      canDownload: params.download,
+      canPause: params.pause,
+      timeLimit: params.timeLimit,
+      delayStart: params.startRecordingDelays,
+      isEditor: params.isEditor,
+      isActivated: false
     });
 
     // Create recording wrapper view
@@ -78,7 +104,7 @@ export default class {
         viewModel.audioSrc = url;
 
         // Create a filename using the title
-        if(params.title && params.title.length > 0) {
+        if (params.title && params.title.length > 0) {
           const filename = params.title.substr(0, 20);
           viewModel.audioFilename = filename.toLowerCase().replace(/ /g, '-') + '.wav';
         }
@@ -93,6 +119,7 @@ export default class {
     viewModel.$on('retry', () => {
       recorder.releaseMic();
       viewModel.audioSrc = AUDIO_SRC_NOT_SPECIFIED;
+      this.startRecording();
     });
 
     viewModel.$on('paused', () => {
@@ -146,6 +173,33 @@ export default class {
     this.attach = function ($wrapper) {
       $wrapper.get(0).appendChild(rootElement);
       viewModel.$mount(rootElement);
-    };
+    }
+
+    /**
+     * Start recording automatically with delays as instructed in configuration.
+     */
+    this.startRecording = function () {
+      if (!params.isEditor && params.startRecordingDelays > 0 && params.audioFile === undefined) {
+        viewModel.recordDelay();
+      }
+    }
+
+    /**
+     * Stop the recording.
+     */
+    this.stop = function () {
+      viewModel.stop();
+      recorder.stop();
+      recorder.releaseMic();
+    }
+
+    /**
+     * Invoke to perform autonomous actions.
+     */
+    this.activated = function () {
+      this.startRecording();
+      if (!params.isEditor && params.autoplayAudioFile && params.audioFile !== undefined)
+        viewModel.playAudioFile();
+    }
   }
 }

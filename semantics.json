@@ -4,9 +4,79 @@
     "importance": "high",
     "name": "title",
     "type": "text",
-    "widget": "textarea",
+    "widget": "html",
     "description": "Optional text to display above the audio recorder",
-    "optional": true
+    "optional": true,
+    "enterMode": "p",
+    "tags": [
+      "strong",
+      "em",
+      "del",
+      "a",
+      "ul",
+      "ol",
+      "h2",
+      "h3",
+      "hr",
+      "pre",
+      "code"
+    ],
+    "font": {
+      "size": true,
+      "color": true,
+      "background": true
+    }
+  },
+  {
+    "name": "audioFile",
+    "type": "audio",
+    "label": "Audio File",
+    "disableCopyright": true,
+    "importance": "low"
+  },
+  {
+    "name": "autoplayAudioFile",
+    "type": "boolean",
+    "label": "Enable autoplay of audio file",
+    "importance": "low",
+    "default": false
+  },
+  {
+    "name": "startRecordingDelays",
+    "label": "Start Recording with Delays",
+    "type": "number",
+    "description": "Start the recording automatically after a delay (in seconds).",
+    "importance": "low",
+    "default": 0
+  },
+  {
+    "name": "timeLimit",
+    "label": "Time Limit",
+    "type": "number",
+    "description": "The maximum amount of time in each recording. The recording will stop when the time exceeds the limit.",
+    "importance": "low",
+    "default": 0
+  },
+  {
+    "name": "retry",
+    "type": "boolean",
+    "label": "Allow to retry the recording",
+    "importance": "low",
+    "default": true
+  },
+  {
+    "name": "download",
+    "type": "boolean",
+    "label": "Allow to download the recording",
+    "importance": "low",
+    "default": true
+  },
+  {
+    "name": "pause",
+    "type": "boolean",
+    "label": "Allow to pause the recording",
+    "importance": "low",
+    "default": true
   },
   {
     "label": "Localization",
@@ -76,6 +146,18 @@
         "default": "Press a button below to record your answer."
       },
       {
+        "name": "statusReadyAndAutoRecord",
+        "label": "Auto record status message",
+        "type": "text",
+        "default": "The recording will start automatically"
+      },
+      {
+        "name": "statusPreRecording",
+        "label": "Pre-Recording status message",
+        "type": "text",
+        "default": "Recording in ..."
+      },
+      {
         "name": "statusRecording",
         "label": "Recording status message",
         "type": "text",
@@ -91,7 +173,7 @@
         "name": "statusFinishedRecording",
         "label": "Finished recording status message",
         "type": "text",
-        "default": "You have successfully recorded your answer! Listen to the recording below."
+        "default": "You have successfully recorded your answer!"
       },
       {
         "name": "downloadRecording",
@@ -128,6 +210,18 @@
         "label": "Can't create audio file status message",
         "type": "text",
         "default": "Can't create the audio file."
+      },
+      {
+        "name": "audioFinishes",
+        "label": "when the audio finishes",
+        "type": "text",
+        "default": "when the audio finishes"
+      },
+      {
+        "name": "audioFinishesStartRecording",
+        "label": "When the audio finishes, the recording will start automatically",
+        "type": "text",
+        "default": "When the audio finishes, the recording will start automatically"
       }
     ]
   }

@@ -100,9 +100,7 @@ export default class Recorder extends H5P.EventDispatcher {
       });
     });
 
-    this.worker.postMessage({
-      command: 'export-wav'
-    });
+    this.worker.postMessage({command: 'export-wav'});
 
     return loadAudioUrl;
   }
@@ -241,14 +239,12 @@ export default class Recorder extends H5P.EventDispatcher {
   releaseMic() {
     this._setState(RecorderState.inactive);
     // Clear the buffers:
-    this.worker.postMessage({
-      command: 'clear'
-    });
+    this.worker.postMessage({command: 'clear'});
 
-    this.stream.getAudioTracks().forEach(track => track.stop());
-    this.sourceNode.disconnect();
-    this.scriptProcessorNode.disconnect();
-    this.audioContext.close();
+    if (this.stream) this.stream.getAudioTracks().forEach(track => track.stop());
+    if (this.sourceNode) this.sourceNode.disconnect();
+    if (this.scriptProcessorNode) this.scriptProcessorNode.disconnect();
+    if (this.audioContext) this.audioContext.close().then(function() { });
 
     delete this.userMedia;
   }

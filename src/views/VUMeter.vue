@@ -64,7 +64,7 @@
     line-height: 5em;
     color: #8e8e8e;
     position: relative;
-    margin-bottom: 1em;
+    margin-bottom: 0.5em;
   }
 
   .h5p-audio-recorder-vu-meter {

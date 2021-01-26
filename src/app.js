@@ -34,6 +34,8 @@ export default class {
 
     const recorder = this.recorder = new Recorder();
 
+    let answered = false;
+
     let readyMsg = params.l10n.statusReadyToRecord;
     if (params.startRecordingDelays > 0 && params.audioFile === undefined)
       readyMsg = params.l10n.statusReadyAndAutoRecord + ' in ' + params.startRecordingDelays + ' seconds.';
@@ -51,6 +53,7 @@ export default class {
     statusMessages[State.DONE] = params.l10n.statusFinishedRecording;
     statusMessages[State.INSECURE_NOT_ALLOWED] = params.l10n.insecureNotAllowed;
     statusMessages[State.CANT_CREATE_AUDIO_FILE] = params.l10n.statusCantCreateTheAudioFile;
+    statusMessages[State.SOLUTION] = params.l10n.statusSolution;
 
     // Add supported for extra audio files.
     let audioFileSrc;
@@ -74,6 +77,7 @@ export default class {
       canRetry: params.retry,
       canDownload: params.download,
       canPause: params.pause,
+      canCheck: params.check,
       timeLimit: params.timeLimit,
       delayStart: params.startRecordingDelays,
       isEditor: params.isEditor,
@@ -98,11 +102,20 @@ export default class {
     });
 
     viewModel.$on('done', () => {
+      answered = true;
       recorder.stop();
-      recorder.getWavURL().then(url => {
-        recorder.releaseMic();
-        viewModel.audioSrc = url;
 
+      recorder.getWavData().then(e => {
+        recorder.releaseMic();
+        params.userAnswer = viewModel.audioSrc;
+      
+        var reader = new window.FileReader();
+        reader.readAsDataURL(e.data);
+        reader.onloadend = function () {
+          params.userAnswerBase64 = reader.result;
+          viewModel.audioSrc = params.userAnswerBase64;
+        }
+        
         // Create a filename using the title
         if (params.title && params.title.length > 0) {
           const filename = params.title.substr(0, 20);
@@ -124,6 +137,10 @@ export default class {
 
     viewModel.$on('paused', () => {
       recorder.stop();
+    });
+
+    viewModel.$on('solution', () => {
+      this.trigger(this.getXAPIAnswerEvent());
     });
 
     // Update UI when on recording events
@@ -188,9 +205,8 @@ export default class {
      * Stop the recording.
      */
     this.stop = function () {
-      viewModel.stop();
-      recorder.stop();
-      recorder.releaseMic();
+      if (viewModel.state !== State.DONE)
+        viewModel.done();
     }
 
     /**
@@ -201,5 +217,58 @@ export default class {
       if (!params.isEditor && params.autoplayAudioFile && params.audioFile !== undefined)
         viewModel.playAudioFile();
     }
+
+    /**
+   * Checks if answer has been given.
+   *
+   * @returns {Boolean}
+   */
+    this.getAnswerGiven = function() {
+      return answered;
+    }
+
+    this.getScore = function() {
+      return 0;
+    }
+
+    this.getMaxScore = function() {
+      return 0;
+    }
+
+    this.showSolutions = function() {
+      viewModel.audioSrc = params.userAnswer;
+      viewModel.state = State.SOLUTION;
+    }
+
+    /**
+     * Build xAPI answer event.
+     * @return {H5P.XAPIEvent} xAPI answer event.
+     */
+    this.getXAPIAnswerEvent = function () {
+      const xAPIEvent = this.createXAPIEventTemplate('answered');
+      const definition = xAPIEvent.getVerifiedStatementValue(['object', 'definition']);
+      definition.description = {
+        'en-US': params.title
+      };
+      definition.type = 'http://id.tincanapi.com/activitytype/essay';
+      definition.interactionType = 'audio-recording';
+
+      xAPIEvent.setScoredResult(this.getScore(), this.getMaxScore(), this, true, true);
+      xAPIEvent.data.statement.result.response = params.userAnswerBase64;
+
+      return xAPIEvent;
+    };
+
+    /**
+   * Get xAPI data.
+   * Contract used by report rendering engine.
+   *
+   * @see contract at {@link https://h5p.org/documentation/developers/contracts#guides-header-6}
+   */
+    this.getXAPIData = function(){
+      return {
+        statement: this.getXAPIAnswerEvent().data.statement
+      };
+    };
   }
 }

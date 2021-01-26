@@ -13,7 +13,8 @@ const State = {
   INSECURE_NOT_ALLOWED: 'insecure-not-allowed',
   CANT_CREATE_AUDIO_FILE: 'cant-create-audio-file',
   PRE_RECORDING: 'pre-recording',
-  PLAYING: 'playing'
+  PLAYING: 'playing',
+  SOLUTION: 'solution'
 };
 
 export default State;

@@ -1,5 +1,7 @@
 <template>
   <div class="h5p-audio-recorder-view">
+    <div v-if="state !== 'done'  && title" class="title" v-html="title" />
+
     <vuMeter :avgMicFrequency="avgMicFrequency" :enablePulse="state === 'recording'"></vuMeter>
     
     <div role="status" v-bind:class="state" v-html="statusMessages[state]" />
@@ -11,7 +13,7 @@
       </audio>
     </div>
 
-    <div class="h5p-audio-recorder-player" v-if="canRetry && state === 'done' && audioSrc !== ''">
+    <div class="h5p-audio-recorder-player" v-if="canRetry && (state === 'done' || state === 'solution') && audioSrc !== ''">
       <audio controls="controls" controlslist="nodownload">
         Your browser does not support the <code>audio</code> element.
         <source v-bind:src="audioSrc">
@@ -21,32 +23,29 @@
     <timer ref="timer" v-bind:stopped="state !== 'recording' && state !== 'pre-recording'" 
       v-if="state !== 'playing' || state !== 'unsupported' && state !== 'done' && state !== 'insecure-not-allowed'"></timer>
 
-    <div v-if="state !== 'done'  && title" class="title" v-html="title" />
-
     <div class="button-row">
       <div class="button-row-double">
-        <button class="button record"
+        <button class="button record small"
                 v-if="state === 'ready' || state === 'blocked'"
                 ref="button-record"
                 v-on:click="record">
           <span class="fa-circle"></span>
           {{ l10n.recordAnswer }}
         </button>
-
         <button class="button retry small"
                 v-if="canRetry && (state === 'recording' || state === 'paused')"
                 v-on:click="retry">
           <span class="fa-undo"></span>
           <span class="small-screen-hidden">{{ l10n.retry }}</span>
         </button>
-        <button class="button pause"
+        <button class="button pause small"
                 ref="button-pause"
                 v-if="canPause && state === 'recording'"
                 v-on:click="pause">
           <span class="fa-pause"></span>
           <span class="small-screen-hidden">{{ l10n.pause }}</span>
         </button>
-        <button class="button record"
+        <button class="button record small"
                 ref="button-continue"
                 v-if="state === 'paused'"
                 v-on:click="record">
@@ -73,11 +72,17 @@
       </span>
 
       <span class="button-row-right">
-        <button class="button retry"
+        <button class="button retry small"
                 v-if="canRetry && (state === 'done' || state === 'cant-create-audio-file')"
                 v-on:click="retry">
           <span class="fa-undo"></span>
           <span class="small-screen-hidden">{{ l10n.retry }}</span>
+        </button>
+         <button class="button done small"
+                v-if="canCheck && (state === 'done')"
+                v-on:click="check">
+          <span class="fa-play-circle"></span>
+          <span class="small-screen-hidden">{{ l10n.check }}</span>
         </button>
       </span>
     </div>
@@ -138,6 +143,11 @@
       done: function() {
         this.state = State.DONE;
         this.$emit(State.DONE);
+      },
+
+      check: function() {
+        this.state = State.SOLUTION;
+        this.$emit(State.SOLUTION);
       },
 
       stop: function() {
@@ -220,7 +230,6 @@
     font-size: 1em;
     padding: 0.9em;
     text-align: center;
-    font-family: Arial, 'Open Sans', sans-serif;
 
     [class^="fa-"] {
       font-family: 'H5PFontAwesome4';
@@ -241,7 +250,7 @@
 
     .h5p-audio-recorder-player {
       box-sizing: border-box;
-      margin: 1.25em 1em 0 1em;
+      margin: 1em 1em 0 1em;
 
       audio {
         width: 100%;
@@ -267,7 +276,7 @@
     [role="status"] {
       background-color: #f8f8f8;
       color: #777777;
-      padding: 0.6em;
+      padding: 0.3em;
 
       &.recording {
        background-color: #f9e5e6;
@@ -293,7 +302,7 @@
     }
 
     .h5p-audio-recorder-download {
-      font-size: 1.2em;
+      font-size: 1em;
       padding: 2em;
     }
 
@@ -375,8 +384,7 @@
     }
 
     .button {
-      font-size: 1.042em;
-      font-family: 'Open Sans', sans-serif;
+      font-size: 1em;
       padding: 0.708em 1.250em;
       border-radius: 2em;
       margin: 0 0.5em;

@@ -79,6 +79,13 @@
     "default": true
   },
   {
+    "name": "check",
+    "type": "boolean",
+    "label": "Allow to check the solution",
+    "importance": "low",
+    "default": true
+  },
+  {
     "label": "Localization",
     "name": "l10n",
     "type": "group",
@@ -119,6 +126,12 @@
         "label": "Retry button text",
         "type": "text",
         "default": "Retry"
+      },
+      {
+        "name": "check",
+        "label": "Check button text",
+        "type": "text",
+        "default": "Check"
       },
       {
         "name": "microphoneNotSupported",
@@ -174,6 +187,12 @@
         "label": "Finished recording status message",
         "type": "text",
         "default": "You have successfully recorded your answer!"
+      },
+      {
+        "name": "statusSolution",
+        "label": "Check for solution",
+        "type": "text",
+        "default": "Show solution."
       },
       {
         "name": "downloadRecording",

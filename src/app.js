@@ -28,7 +28,7 @@ export default class {
    * @param {string} contentId
    * @param {object} contentData
    */
-  constructor(params, contentId, contentData = {}) {
+  constructor(params, contentId, contentData) {
     const rootElement = document.createElement('div');
     rootElement.classList.add('h5p-audio-recorder');
 
@@ -103,7 +103,7 @@ export default class {
 
     viewModel.$on('done', () => {
       answered = true;
-      recorder.stop();
+      //recorder.stop();
 
       recorder.getWavData().then(e => {
         recorder.releaseMic();
@@ -205,7 +205,7 @@ export default class {
      * Stop the recording.
      */
     this.stop = function () {
-      if (viewModel.state !== State.DONE)
+      if (viewModel.state === State.RECORDING)
         viewModel.done();
     }
 
@@ -269,6 +269,10 @@ export default class {
       return {
         statement: this.getXAPIAnswerEvent().data.statement
       };
+    };
+
+    this.getTitle = function () {
+      return H5P.createTitle((contentData.metadata && contentData.metadata.title) ? contentData.metadata.title : 'Fill In');
     };
   }
 }

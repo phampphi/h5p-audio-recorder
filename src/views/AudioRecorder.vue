@@ -2,7 +2,7 @@
   <div class="h5p-audio-recorder-view">
     <div v-if="state !== 'done'  && title" class="title" v-html="title" />
 
-    <vuMeter :avgMicFrequency="avgMicFrequency" :enablePulse="state === 'recording'"></vuMeter>
+    <vuMeter :avgMicFrequency="avgMicFrequency" :enablePulse="state === 'recording'" v-if="(state !== 'done' && state !== 'solution')"></vuMeter>
     
     <div role="status" v-bind:class="state" v-html="statusMessages[state]" />
 
@@ -14,9 +14,16 @@
     </div>
 
     <div class="h5p-audio-recorder-player" v-if="canRetry && (state === 'done' || state === 'solution') && audioSrc !== ''">
-      <audio controls="controls" controlslist="nodownload">
+      Your answer: <audio controls="controls" controlslist="nodownload">
         Your browser does not support the <code>audio</code> element.
         <source v-bind:src="audioSrc">
+      </audio>
+    </div>
+
+    <div class="h5p-audio-recorder-player" v-if="canCheck && (state === 'solution') && solutionFileSrc !== ''">
+      Solution: <audio controls="controls" controlslist="nodownload">
+        Your browser does not support the <code>audio</code> element.
+        <source v-bind:src="solutionFileSrc">
       </audio>
     </div>
 
@@ -63,7 +70,7 @@
       <span class="button-row-left">
         <a class="button download"
            ref="button-download"
-           v-if="canDownload && state === 'done'"
+           v-if="canDownload && (state === 'done' || state === 'solution')" 
            v-bind:href="audioSrc"
            v-bind:download="audioFilename">
           <span class="icon-download"></span>
@@ -73,7 +80,7 @@
 
       <span class="button-row-right">
         <button class="button retry small"
-                v-if="canRetry && (state === 'done' || state === 'cant-create-audio-file')"
+                v-if="canRetry && (state === 'done' || state === 'cant-create-audio-file' || state === 'solution')"
                 v-on:click="retry">
           <span class="fa-undo"></span>
           <span class="small-screen-hidden">{{ l10n.retry }}</span>
@@ -254,6 +261,7 @@
 
       audio {
         width: 100%;
+        height: 30px;
       }
     }
 
@@ -385,7 +393,7 @@
 
     .button {
       font-size: 1em;
-      padding: 0.708em 1.250em;
+      padding: 0.5em 1em;
       border-radius: 2em;
       margin: 0 0.5em;
       border: 0;

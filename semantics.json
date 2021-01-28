@@ -35,6 +35,14 @@
     "importance": "low"
   },
   {
+    "name": "audioSolutionFile",
+    "type": "audio",
+    "label": "Audio Solution File",
+    "disableCopyright": true,
+    "importance": "low",
+    "optional": "true"
+  },
+  {
     "name": "autoplayAudioFile",
     "type": "boolean",
     "label": "Enable autoplay of audio file",

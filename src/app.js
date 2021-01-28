@@ -55,12 +55,19 @@ export default class {
     statusMessages[State.CANT_CREATE_AUDIO_FILE] = params.l10n.statusCantCreateTheAudioFile;
     statusMessages[State.SOLUTION] = params.l10n.statusSolution;
 
-    // Add supported for extra audio files.
-    let audioFileSrc;
+    // Add supported for extra audio file.
+    let audioFileSrc, solutionFileSrc;
     if (params.audioFile !== undefined && params.audioFile instanceof Object) {
-      var file = params.audioFile[0];
-      if ("audio/mpeg" === file.mime) {
+      var file = params.audioFile[0]; 
+      if (file && "audio/mpeg" === file.mime) {
         audioFileSrc = H5P.getPath(file.path, contentId);
+      }
+    }
+    // Add supported for audio solution file.
+    if (params.audioSolutionFile !== undefined && params.audioSolutionFile instanceof Object) {
+      var file = params.audioSolutionFile[0]; 
+      if (file && "audio/mpeg" === file.mime) {
+        solutionFileSrc = H5P.getPath(file.path, contentId);
       }
     }
 
@@ -72,6 +79,7 @@ export default class {
       audioFileSrc: !!audioFileSrc ? audioFileSrc : AUDIO_SRC_NOT_SPECIFIED,
       audioSrc: AUDIO_SRC_NOT_SPECIFIED,
       audioFilename: '',
+      solutionFileSrc: !!solutionFileSrc ? solutionFileSrc : AUDIO_SRC_NOT_SPECIFIED,
       avgMicFrequency: 0,
       isAutoplay: params.autoplayAudioFile,
       canRetry: params.retry,

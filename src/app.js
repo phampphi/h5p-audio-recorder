@@ -204,26 +204,24 @@ export default class {
      * Start recording automatically with delays as instructed in configuration.
      */
     this.startRecording = function () {
-      if (!params.isEditor && params.startRecordingDelays > 0 && params.audioFile === undefined) {
-        viewModel.recordDelay();
-      }
+      (!params.isEditor && params.startRecordingDelays > 0) && viewModel.recordDelay();
     }
 
     /**
      * Stop the recording.
      */
     this.stop = function () {
-      if (viewModel.state === State.RECORDING)
-        viewModel.done();
+      (viewModel.state === State.RECORDING) && viewModel.done();
+      viewModel.clearTimeouts();
     }
 
     /**
      * Invoke to perform autonomous actions.
      */
     this.activated = function () {
-      this.startRecording();
-      if (!params.isEditor && params.autoplayAudioFile && params.audioFile !== undefined)
-        viewModel.playAudioFile();
+      if (params.isEditor) return;
+      (params.autoplayAudioFile && params.audioFile !== undefined) 
+        ? viewModel.playAudioFile() : this.startRecording();
     }
 
     /**
@@ -255,11 +253,17 @@ export default class {
     this.getXAPIAnswerEvent = function () {
       const xAPIEvent = this.createXAPIEventTemplate('answered');
       const definition = xAPIEvent.getVerifiedStatementValue(['object', 'definition']);
+      definition.name = {};
+      // Fallback for h5p-php-reporting, expects en-US
+      definition.name['en-US'] = this.getTitle();
+
       definition.description = {
         'en-US': params.title
       };
       definition.type = 'http://id.tincanapi.com/activitytype/essay';
       definition.interactionType = 'audio-recording';
+      // Add title for h5p-php-reporting
+      definition.extensions.title = definition.name['en-US'];
 
       xAPIEvent.setScoredResult(this.getScore(), this.getMaxScore(), this, true, true);
       xAPIEvent.data.statement.result.response = params.userAnswerBase64;
@@ -268,11 +272,11 @@ export default class {
     };
 
     /**
-   * Get xAPI data.
-   * Contract used by report rendering engine.
-   *
-   * @see contract at {@link https://h5p.org/documentation/developers/contracts#guides-header-6}
-   */
+    * Get xAPI data.
+    * Contract used by report rendering engine.
+    *
+    * @see contract at {@link https://h5p.org/documentation/developers/contracts#guides-header-6}
+    */
     this.getXAPIData = function(){
       return {
         statement: this.getXAPIAnswerEvent().data.statement

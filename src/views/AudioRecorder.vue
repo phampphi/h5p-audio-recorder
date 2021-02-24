@@ -1,6 +1,6 @@
 <template>
   <div class="h5p-audio-recorder-view">
-    <div v-if="state !== 'done'  && title" class="title" v-html="title" />
+    <div v-if="title" class="title" v-html="title" />
 
     <vuMeter :avgMicFrequency="avgMicFrequency" :enablePulse="state === 'recording'" v-if="(state !== 'done' && state !== 'solution')"></vuMeter>
     
@@ -33,7 +33,7 @@
     <div class="button-row">
       <div class="button-row-double">
         <button class="button record small"
-                v-if="state === 'ready' || state === 'blocked'"
+                v-if="(state === 'ready' || state === 'blocked') && delayStart === 0"
                 ref="button-record"
                 v-on:click="record">
           <span class="fa-circle"></span>

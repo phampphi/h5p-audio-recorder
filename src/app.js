@@ -62,6 +62,8 @@ export default class {
       if (file && "audio/mpeg" === file.mime) {
         audioFileSrc = H5P.getPath(file.path, contentId);
       }
+      else if (file && file.path.indexOf("https") == 0)
+        audioFileSrc = file.path;
     }
     // Add supported for audio solution file.
     if (params.audioSolutionFile !== undefined && params.audioSolutionFile instanceof Object) {
@@ -69,6 +71,8 @@ export default class {
       if (file && "audio/mpeg" === file.mime) {
         solutionFileSrc = H5P.getPath(file.path, contentId);
       }
+      else if (file && file.path.indexOf("https") == 0)
+        solutionFileSrc = file.path;
     }
 
     AudioRecorderView.data = () => ({
@@ -213,6 +217,7 @@ export default class {
      */
     this.stop = function () {
       (viewModel.state === State.RECORDING) && viewModel.done();
+      (viewModel.state === State.PLAYING) && viewModel.stop();
       viewModel.clearTimeouts();
     }
 
@@ -239,7 +244,7 @@ export default class {
     }
 
     this.getMaxScore = function() {
-      return 0;
+      return 1;
     }
 
     this.showSolutions = function() {
@@ -285,7 +290,7 @@ export default class {
     };
 
     this.getTitle = function () {
-      return H5P.createTitle((contentData.metadata && contentData.metadata.title) ? contentData.metadata.title : 'Fill In');
+      return H5P.createTitle((contentData.metadata && contentData.metadata.title) ? contentData.metadata.title : 'Audio Recording');
     };
   }
 }

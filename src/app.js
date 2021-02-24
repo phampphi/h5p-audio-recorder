@@ -119,9 +119,10 @@ export default class {
       
         var reader = new window.FileReader();
         reader.readAsDataURL(e.data);
-        reader.onloadend = function () {
+        reader.onloadend = () => {
           params.userAnswerBase64 = reader.result;
           viewModel.audioSrc = params.userAnswerBase64;
+          this.trigger('resize');
         }
         
         // Create a filename using the title
@@ -130,7 +131,7 @@ export default class {
           viewModel.audioFilename = filename.toLowerCase().replace(/ /g, '-') + '.wav';
         }
 
-        this.trigger('resize')
+        this.trigger('resize');
       }).catch(e => {
         viewModel.state = State.CANT_CREATE_AUDIO_FILE;
         console.error(params.l10n.statusCantCreateTheAudioFile, e);

@@ -35,6 +35,7 @@ export default class {
     const recorder = this.recorder = new Recorder();
 
     let answered = false;
+    let audioRecordingFile = null;
 
     let readyMsg = params.l10n.statusReadyToRecord;
     if (params.startRecordingDelays > 0 && params.audioFile === undefined)
@@ -93,7 +94,8 @@ export default class {
       timeLimit: params.timeLimit,
       delayStart: params.startRecordingDelays,
       isEditor: params.isEditor,
-      isActivated: false
+      isActivated: false,
+      uploadUrl: null
     });
 
     // Create recording wrapper view
@@ -119,20 +121,30 @@ export default class {
 
       recorder.getWavData().then(e => {
         recorder.releaseMic();
-        params.userAnswer = viewModel.audioSrc;
-      
-        var reader = new window.FileReader();
-        reader.readAsDataURL(e.data);
-        reader.onloadend = () => {
-          params.userAnswerBase64 = reader.result;
-          viewModel.audioSrc = params.userAnswerBase64;
-          this.trigger('resize');
-        }
-        
-        // Create a filename using the title
-        if (params.title && params.title.length > 0) {
-          const filename = params.title.substr(0, 20);
-          viewModel.audioFilename = filename.toLowerCase().replace(/ /g, '-') + '.wav';
+        viewModel.audioSrc = URL.createObjectURL(e.data);
+
+        if (!!params.uploadUrl) {
+          const actor = this.createXAPIEventTemplate('audio').data.statement.actor.name;
+          // Create a filename 
+          if (!!contentData && !!contentData.parent) {
+            const filename = `${actor}_${contentData.parent.contentId}_${Date.now()}.wav`;
+            viewModel.audioFilename = filename;
+          }
+          else 
+            viewModel.audioFilename = `${actor}_${Date.now()}.wav`;
+
+          // upload audio file for storage
+          const formData = new FormData();
+          formData.append('file', e.data, viewModel.audioFilename);
+          fetch(params.uploadUrl, {method:"POST", body: formData})
+              .then(response => {
+                  if (response.ok) 
+                    return response.json();
+                  else 
+                    throw Error(`Please contact adminstrator. There was an error while saving your audio answer: ${response.status}: ${response.statusText}`)
+              })
+              .then(data => audioRecordingFile = data.fileLocation)
+              .catch(err => alert(err));
         }
 
         this.trigger('resize');
@@ -216,9 +228,9 @@ export default class {
      * Stop the recording.
      */
     this.stop = function () {
-      (viewModel.state === State.RECORDING) && viewModel.done();
-      (viewModel.state === State.PLAYING) && viewModel.stop();
-      viewModel.clearTimeouts();
+      if (viewModel.state === State.RECORDING) viewModel.done();
+      else if (viewModel.state === State.PLAYING) viewModel.stop();
+      else viewModel.clearTimeouts();
     }
 
     /**
@@ -272,7 +284,7 @@ export default class {
       definition.extensions.title = definition.name['en-US'];
 
       xAPIEvent.setScoredResult(this.getScore(), this.getMaxScore(), this, true, true);
-      xAPIEvent.data.statement.result.response = params.userAnswerBase64;
+      xAPIEvent.data.statement.result.response = audioRecordingFile;
 
       return xAPIEvent;
     };

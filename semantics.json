@@ -66,6 +66,15 @@
     "default": 0
   },
   {
+    "label": "Upload URL",
+    "importance": "high",
+    "name": "uploadUrl",
+    "type": "text",
+    "widget": "text",
+    "description": "Indicate to upload the audio recording to the specified URL",
+    "optional": true
+  },
+  {
     "name": "retry",
     "type": "boolean",
     "label": "Allow to retry the recording",

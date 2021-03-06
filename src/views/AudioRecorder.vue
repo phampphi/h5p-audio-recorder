@@ -147,6 +147,7 @@
       },
 
       done: function() {
+        this.clearTimeouts();
         this.state = State.DONE;
         this.$emit(State.DONE);
       },

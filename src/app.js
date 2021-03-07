@@ -4,6 +4,8 @@ import Vue from 'vue';
 import AudioRecorderView from './views/AudioRecorder.vue';
 import Timer from './views/Timer.vue';
 import VUMeter from './views/VUMeter.vue';
+import moment from 'moment';
+import Swal from 'sweetalert2';
 
 const AUDIO_SRC_NOT_SPECIFIED = '';
 
@@ -34,8 +36,11 @@ export default class {
 
     const recorder = this.recorder = new Recorder();
 
+    let previousState = contentData.previousState;
+
     let answered = false;
-    let audioRecordingFile = null;
+    let audioRecordingFile = !!previousState ? previousState.audioRecordingFile : null;
+    let userAnswerBase64 = !!previousState ? previousState.userAnswerBase64 : null;
 
     let readyMsg = params.l10n.statusReadyToRecord;
     if (params.startRecordingDelays > 0 && params.audioFile === undefined)
@@ -117,21 +122,19 @@ export default class {
 
     viewModel.$on('done', () => {
       answered = true;
-      //recorder.stop();
+      // Create a filename 
+      const actor = this.createXAPIEventTemplate('audio').data.statement.actor.name;
+      if (!!contentData && !!contentData.parent) {
+        const filename = `${actor}-${contentData.parent.contentId}-${moment().format('YYYYMMDDhhmmssSSS')}.wav`;
+        viewModel.audioFilename = filename.toLowerCase().replace(/ /g, '_');
+      }
+      else 
+        viewModel.audioFilename = `${actor}-${moment().format('YYYYMMDDhhmmssSSS')}.wav`;
 
-      recorder.getWavData().then(e => {
-        recorder.releaseMic();
-        viewModel.audioSrc = URL.createObjectURL(e.data);
-
-        if (!!params.uploadUrl) {
-          const actor = this.createXAPIEventTemplate('audio').data.statement.actor.name;
-          // Create a filename 
-          if (!!contentData && !!contentData.parent) {
-            const filename = `${actor}_${contentData.parent.contentId}_${Date.now()}.wav`;
-            viewModel.audioFilename = filename;
-          }
-          else 
-            viewModel.audioFilename = `${actor}_${Date.now()}.wav`;
+      if (!!params.uploadUrl) { // upload to storage service
+        recorder.getWavData().then(e => {
+          recorder.releaseMic();
+          viewModel.audioSrc = URL.createObjectURL(e.data);
 
           // upload audio file for storage
           const formData = new FormData();
@@ -144,14 +147,16 @@ export default class {
                     throw Error(`Please contact adminstrator. There was an error while saving your audio answer: ${response.status}: ${response.statusText}`)
               })
               .then(data => audioRecordingFile = data.fileLocation)
-              .catch(err => alert(err));
-        }
-
-        this.trigger('resize');
-      }).catch(e => {
-        viewModel.state = State.CANT_CREATE_AUDIO_FILE;
-        console.error(params.l10n.statusCantCreateTheAudioFile, e);
-      });
+              //.catch(err => Swal.fire('Recording Error', err.message, 'error'));
+        }).catch(e => {
+          //viewModel.state = State.CANT_CREATE_AUDIO_FILE;
+          console.error(params.l10n.statusCantCreateTheAudioFile, e);
+          this.storeAudioRecording();
+        });
+      }
+      else { // store as base64
+        this.storeAudioRecording();
+      }
     });
 
     viewModel.$on('retry', () => {
@@ -185,6 +190,29 @@ export default class {
     recorder.on('insecure-not-allowed', () => {
       viewModel.state = State.INSECURE_NOT_ALLOWED;
     });
+
+    /**
+     * Store the audio recording as base64.
+     */
+    this.storeAudioRecording = function() {
+      recorder.getWavData().then(e => {
+        recorder.releaseMic();
+        params.userAnswer = viewModel.audioSrc;
+      
+        var reader = new window.FileReader();
+        reader.readAsDataURL(e.data);
+        reader.onloadend = () => {
+          userAnswerBase64 = reader.result;
+          viewModel.audioSrc = userAnswerBase64;
+        }
+        
+        this.trigger('resize');
+      }).catch(e => {
+        viewModel.state = State.CANT_CREATE_AUDIO_FILE;
+        console.error(params.l10n.statusCantCreateTheAudioFile, e);
+        Swal.fire('Recording Error', e.message, 'error')
+      });
+    }
 
     /**
      * Initialize microphone frequency update loop. Will run until no longer recording.
@@ -284,7 +312,7 @@ export default class {
       definition.extensions.title = definition.name['en-US'];
 
       xAPIEvent.setScoredResult(this.getScore(), this.getMaxScore(), this, true, true);
-      xAPIEvent.data.statement.result.response = audioRecordingFile;
+      xAPIEvent.data.statement.result.response = audioRecordingFile || userAnswerBase64;
 
       return xAPIEvent;
     };
@@ -303,6 +331,14 @@ export default class {
 
     this.getTitle = function () {
       return H5P.createTitle((contentData.metadata && contentData.metadata.title) ? contentData.metadata.title : 'Audio Recording');
+    };
+
+    this.getCurrentState = function () {
+      var state = previousState ? previousState : {};
+      state.audioRecordingFile = audioRecordingFile;
+      state.userAnswerBase64 = userAnswerBase64;
+    
+      return state;
     };
   }
 }

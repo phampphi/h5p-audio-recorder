@@ -40,6 +40,8 @@
     "webpack": "^2.2.1"
   },
   "dependencies": {
+    "moment": "^2.29.1",
+    "sweetalert2": "^10.15.5",
     "vue": "^2.2.4"
   },
   "ava": {

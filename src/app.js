@@ -125,11 +125,11 @@ export default class {
       // Create a filename 
       const actor = this.createXAPIEventTemplate('audio').data.statement.actor.name;
       if (!!contentData && !!contentData.parent) {
-        const filename = `${actor}-${contentData.parent.contentId}-${moment().format('YYYYMMDDhhmmssSSS')}.wav`;
+        const filename = `${moment().format('YYYYMMDD')}/${actor}-${contentData.parent.contentId}-${moment().format('YYYYMMDDhhmmssSSS')}.wav`;
         viewModel.audioFilename = filename.toLowerCase().replace(/ /g, '_');
       }
       else 
-        viewModel.audioFilename = `${actor}-${moment().format('YYYYMMDDhhmmssSSS')}.wav`;
+        viewModel.audioFilename = `${moment().format('YYYYMMDD')}/${actor}-${moment().format('YYYYMMDDhhmmssSSS')}.wav`;
 
       if (!!params.uploadUrl) { // upload to storage service
         recorder.getWavData().then(e => {
